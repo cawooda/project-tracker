@@ -1,13 +1,20 @@
 // Retrieve tasks and nextId from localStorage
 let taskList = JSON.parse(localStorage.getItem("tasks"));
 let nextId = JSON.parse(localStorage.getItem("nextId"));
-let modalForm = $('#modal-form').dialog({
+let $modalForm = $('#modal-form');
+let $taskName = $('#modal-form #task-name');
+let $taskDescription = $('#modal-form #task-description');
+let $taskDueDate = $('#modal-form #due-date');
+
+$modalForm.dialog({
         autoOpen: false,
-      height: 200,
-      width: 350,
+        minHeight: 200,
+      minWidth: 400,
       modal: true
       }
 );
+let $modaFormSubmit = $('#task-submit-btn');
+
 const $dueDate = $('#due-date').datepicker();
 const $addTaskBtn = $('#add-task-btn');
 
@@ -45,7 +52,8 @@ function renderTaskList() {
 function handleAddTask(event){
     //create a task from the information given
     // task list will need to have a new task added to it.
-
+    $modalForm.dialog('close');
+    console.log("event handler triggered add task");
 }
 
 // Todo: create a function to handle deleting a task
@@ -61,6 +69,35 @@ function handleDrop(event, ui) {
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
 $(document).ready(function () {
     $addTaskBtn.on('click',function (){
-        modalForm.dialog('open');
+        $modalForm.dialog('open');
+    })
+
+    $modaFormSubmit.on('click',function(event){
+        event.preventDefault();
+        
+        if (!$taskName.val() || !$taskDescription.val() || !$dueDate.val()){
+            console.log('inputs not right');
+            return false;
+            
+        }
+
+        let taskAdd = {
+            taskName:$taskName.val(),
+            taskDescription: $taskDescription.val(),
+            taskDate:$dueDate.val(),
+        }
+
+        $taskName.val('');
+        $taskDescription.val('');
+        $taskDueDate.val('');
+        
+        console.log(taskAdd);
+
+        $modalForm.dialog('close');
+        handleAddTask(taskAdd);
+        console.log('inputs right');
+        return true;
+        
     })
 });
+
