@@ -1,9 +1,18 @@
 // Retrieve tasks and nextId from localStorage
+
+const TODO = "todo";
+const IN_PROGRESS = "in progress";
+const DONE = "done";
+
 let taskList = JSON.parse(localStorage.getItem("tasks"));
-console.log(taskList);
 if (!taskList) taskList = [];
 
 let nextId = JSON.parse(localStorage.getItem("nextId"));
+
+let $todo = $('#todo-cards');
+let $inProgress = $('#in-progress-cards');
+let $done = $('#done-cards');
+
 let $modalForm = $('#modal-form');
 let $taskName = $('#modal-form #task-name');
 let $taskDescription = $('#modal-form #task-description');
@@ -24,31 +33,47 @@ const $addTaskBtn = $('#add-task-btn');
 // Todo: create a function to generate a unique task id
 //
 function generateTaskId() {
-    return taskList.length() + 1;
+    if (nextId) {
+        localStorage.setItem("nextId",taskList.length() + 1)
+        return nextId;} else return 1;
     //read the length of the tasklist and return the next task number
 }
 
 // Todo: create a function to create a task card
 function createTaskCard(task) {
-    
+    const $taskCard = $("<div></div>")
+
     const $taskName = $("<h2></h2>");
     $taskName.text(task.name);
+    $taskCard.append($taskName);
+
+    const $taskDescription = $("<p></p>");
+    $taskDescription.text(task.description);
+    $taskCard.append($taskDescription);
 
     const $taskDueDate = $("<p></p>");
     $taskDueDate.text(task.dueDate);
+    $taskCard.append($taskDueDate);
 
-    const $taskDescription = $("<p></p>");
-    $taskDueDate.text(task.description);
-
-
-    const $taskCard = $("<div></div>")
-    $taskCard.append($taskCard)
+    const $taskStatus = $("<p></p>");
+    $taskStatus.text(task.status);
+    $taskCard.append($taskStatus);
+    
     return $taskCard;
 }
 
 // Todo: create a function to render the task list and make cards draggable
 function renderTaskList() {
-
+    for (task of taskList) {
+        console.log(createTaskCard(task))
+        if (task.status == TODO) {
+            $todo.append(createTaskCard(task));
+        } else if (task.status == IN_PROGRESS) {
+            $inProgress.append(createTaskCard(task));
+        } else {
+            $done.append(createTaskCard(task));
+        }
+    }
 }
 
 // Todo: create a function to handle adding a new task
@@ -64,6 +89,8 @@ function handleAddTask(event){
             taskName:$taskName.val(),
             taskDescription: $taskDescription.val(),
             taskDate:$dueDate.val(),
+            taskStatus: TODO,
+            taskId:function(){return generateTaskId()}
         }
 
         $taskName.val('');
@@ -75,10 +102,11 @@ function handleAddTask(event){
         taskList.push(taskAdd);
 
         localStorage.setItem('tasks',JSON.stringify(taskList));
-        console.log(localStorage.getItem('tasks'));
+        
 
         console.log(taskList);
         console.log('inputs right');
+        renderTaskList();
         return true;
         
     
@@ -102,7 +130,7 @@ $(document).ready(function () {
     $addTaskBtn.on('click',function (){
         $modalForm.dialog('open');
     })
-
+    renderTaskList();
     $modaFormSubmit.on('click',handleAddTask)
 });
 
