@@ -1,5 +1,8 @@
 // Retrieve tasks and nextId from localStorage
 let taskList = JSON.parse(localStorage.getItem("tasks"));
+console.log(taskList);
+if (!taskList) taskList = [];
+
 let nextId = JSON.parse(localStorage.getItem("nextId"));
 let $modalForm = $('#modal-form');
 let $taskName = $('#modal-form #task-name');
@@ -50,10 +53,38 @@ function renderTaskList() {
 
 // Todo: create a function to handle adding a new task
 function handleAddTask(event){
+    
+        event.preventDefault();
+        if (!$taskName.val() || !$taskDescription.val() || !$dueDate.val()){
+            console.log('inputs not right');
+            return false; //returns false of inputs not right. can be relpaced by a flash or something.
+        }
+
+        let taskAdd = {
+            taskName:$taskName.val(),
+            taskDescription: $taskDescription.val(),
+            taskDate:$dueDate.val(),
+        }
+
+        $taskName.val('');
+        $taskDescription.val('');
+        $taskDueDate.val('');
+        
+
+        $modalForm.dialog('close');
+        taskList.push(taskAdd);
+
+        localStorage.setItem('tasks',JSON.stringify(taskList));
+        console.log(localStorage.getItem('tasks'));
+
+        console.log(taskList);
+        console.log('inputs right');
+        return true;
+        
+    
     //create a task from the information given
     // task list will need to have a new task added to it.
-    $modalForm.dialog('close');
-    console.log("event handler triggered add task");
+    
 }
 
 // Todo: create a function to handle deleting a task
@@ -72,32 +103,6 @@ $(document).ready(function () {
         $modalForm.dialog('open');
     })
 
-    $modaFormSubmit.on('click',function(event){
-        event.preventDefault();
-        
-        if (!$taskName.val() || !$taskDescription.val() || !$dueDate.val()){
-            console.log('inputs not right');
-            return false;
-            
-        }
-
-        let taskAdd = {
-            taskName:$taskName.val(),
-            taskDescription: $taskDescription.val(),
-            taskDate:$dueDate.val(),
-        }
-
-        $taskName.val('');
-        $taskDescription.val('');
-        $taskDueDate.val('');
-        
-        console.log(taskAdd);
-
-        $modalForm.dialog('close');
-        handleAddTask(taskAdd);
-        console.log('inputs right');
-        return true;
-        
-    })
+    $modaFormSubmit.on('click',handleAddTask)
 });
 
