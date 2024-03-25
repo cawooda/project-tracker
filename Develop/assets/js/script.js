@@ -6,7 +6,8 @@ const DONE = "done";
 
 let taskList = JSON.parse(localStorage.getItem("tasks"));
 if (!taskList) taskList = [];
-console.log(taskList);
+
+
 
 let nextId = 0;
 
@@ -18,59 +19,31 @@ if (localStorage.getItem("nextId")) {
 }
 
 
-let $todo = $('#todo-cards')
+let $todo = $('#todo-cards');
 $todo.droppable({
-    accept: "card",
-    classes: {
-      "ui-droppable-active": "ui-state-active",
-      "ui-droppable-hover": "ui-state-hover"
-    },
-    drop: function( event, ui ) {
-      $( this )
-        .addClass( "ui-state-highlight" )
-        .find( "p" )
-          .html( "Dropped!" );
-    }
-  });
-let $inProgress = $('#in-progress-cards')
+  accept: ".card",
+  drop: function (e,ui) {
+    handleDrop(e,ui)
+  }
+});
+$todo.sortable();
+let $inProgress = $('#in-progress-cards');
 $inProgress.droppable({
-    accept: "card",
-    classes: {
-      "ui-droppable-active": "ui-state-active",
-      "ui-droppable-hover": "ui-state-hover"
-    },
-    drop: function( event, ui ) {
-      $( this )
-        .addClass( "ui-state-highlight" )
-        .find( "p" )
-          .html( "Dropped!" );
-    }
-  });
-let $done = $('#done-cards')
+  accept: ".card",
+  drop: function (e,ui) {
+    handleDrop(e,ui)
+    
+  }
+});
+let $done = $('#done-cards');
 $done.droppable({
-    accept: "card",
-    classes: {
-      "ui-droppable-active": "ui-state-active",
-      "ui-droppable-hover": "ui-state-hover"
-    },
-    drop: function( event, ui ) {
-      $( this )
-        .addClass( "ui-state-highlight" )
-        .data()
-    }
-  });
-
-$todo.sortable({
-    revert: true
-  });
-
-$inProgress.sortable({
-    revert: true
-  });  
-
-$done.sortable({
-    revert: true
-  });  
+  accept: ".card",
+  drop: function (e,ui) {
+    handleDrop(e,ui)
+    
+  }
+});
+ 
 
 let $modalForm = $('#modal-form');
 let $taskName = $('#modal-form #task-name');
@@ -101,12 +74,9 @@ function generateTaskId() {
 // Todo: create a function to create a task card
 function createTaskCard(task) {
     //take the task and return a jquery 
-    $taskCard = $(`<div id="card-${task.taskId}" data-status="${task.taskStatus}" data-id=${task.taskId}></div>`);
-    $taskCard.draggable({appendTo: "body", connectToSortable: "#todo-cards #in-progress-cards", opacity: 0.35});
-
+    $taskCard = $(`<div id="card-${task.taskId}" data-status="${task.taskStatus}" data-id=${task.taskId}></div>`);    
     
-      
-    $taskCard.addClass('card');
+    $taskCard.addClass('card m-4');
 
     if (task.taskStatus == TODO) {
         $taskCard.addClass('bg-primary')
@@ -134,21 +104,33 @@ function createTaskCard(task) {
         $delete.data("purpose","delete");
     const $done = $(`<button data-purpose="done" type="button">Done</button>`)
         $done.addClass('btn btn-sm m-3 col btn-success')
+
+    const $statusButton = $(`<button data-purpose="toggle-status">Status Change</button>"`);
+        $statusButton.addClass('btn btn-sm m-3 col')
+
     $buttons.append($delete);
-    $buttons.append($done); 
+    $buttons.append($done);
 
     $taskCard.append($name);
     $taskCard.append($status);
     $taskCard.append($description);
     $taskCard.append($buttons);
     $taskCard.append($dueDate);
+    $taskCard.append($statusButton);
 
     
     $taskCard.on('click',function (event){
+      console.log($(event.target).data("purpose"))
+        if ($(event.target).data("purpose")=="delete") {
+          
+          handleDeleteTask(event);
+        }
         console.log("button clicked", $(event.target).data("purpose"));
     })
     
-    
+    $taskCard.draggable({
+
+    });  
 
     return $taskCard;
     //return $taskCard;
@@ -170,6 +152,7 @@ function renderTaskList() {
             $done.append(createTaskCard(task));
         }
     }
+   
 }
 
 // Todo: create a function to handle adding a new task
@@ -215,14 +198,30 @@ function handleAddTask(event){
     
 }
 
+
+
 // Todo: create a function to handle deleting a task
 function handleDeleteTask(event){
+  let id = $(event.target).parent().parent().data('id');
 
+  console.log('delete handle is handling id: ',id);
+  console.log("to remove: ",$(event.target).parent().parent());
+  console.log("task list is : ", taskList);
+  const newTaskList = taskList.filter(function(item) {
+    return item.taskId !== id;
+  })
+  console.log("new task list is : ", newTaskList);
+  
+  $(event.target).parent().parent().remove();
+
+  taskList = newTaskList;
+  localStorage.setItem('tasks',newTaskList);
 }
 
 // Todo: create a function to handle dropping a task into a new status lane
 function handleDrop(event, ui) {
-
+  console.log("event handle drop",event);
+  console.log("ui handle drop",ui);
 }
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker

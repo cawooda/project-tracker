@@ -9,10 +9,11 @@ body {
   min-height: 60vh;
 }
 
-.task-card {
+.card {
   margin: 0 auto;
+  z-index : 2 !important;
 }
 
-.task-card:hover {
+.card:hover {
   cursor: grab;
 }
