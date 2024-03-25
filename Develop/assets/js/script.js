@@ -23,6 +23,7 @@ let $todo = $('#todo-cards');
 $todo.droppable({
   accept: ".card",
   drop: function (e,ui) {
+    console.log("e,ui: ",e,ui);
     handleDrop(e,ui)
   }
 });
