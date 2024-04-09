@@ -4,6 +4,7 @@ const TODO = "todo";
 const IN_PROGRESS = "in-progress";
 const DONE = "done";
 
+let nextId = 0;
 let taskList = [];
 if (localStorage.getItem("tasks")) {
     taskList = JSON.parse(localStorage.getItem("tasks"))
