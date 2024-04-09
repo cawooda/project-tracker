@@ -9,9 +9,13 @@ body {
   min-height: 60vh;
 }
 
+.connectedSortable {
+  min-height:300px;
+  border: solid 2px red;
+}
+
 .card {
   margin: 0 auto;
-  z-index : 2 !important;
 }
 
 .card:hover {

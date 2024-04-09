@@ -1,56 +1,40 @@
 // Retrieve tasks and nextId from localStorage
 
 const TODO = "todo";
-const IN_PROGRESS = "in progress";
+const IN_PROGRESS = "in-progress";
 const DONE = "done";
 
-let taskList = JSON.parse(localStorage.getItem("tasks"));
-if (!taskList) taskList = [];
-
-
-
-let nextId = 0;
+let taskList = [];
+if (localStorage.getItem("tasks")) {
+    taskList = JSON.parse(localStorage.getItem("tasks"))
+}
 
 if (localStorage.getItem("nextId")) {
-    nextId = JSON.parse(localStorage.getItem("nextId"));
+    let nextId = JSON.parse(localStorage.getItem("nextId"));
 } else {
-    let nextId = 1;
+    let nextId = 0;
     localStorage.setItem("nextId",nextId);
 }
 
 
-let $todo = $('#todo-cards');
-$todo.droppable({
-  accept: ".card",
-  drop: function (e,ui) {
-    console.log("e,ui: ",e,ui);
-    handleDrop(e,ui)
-  }
-});
-$todo.sortable();
-let $inProgress = $('#in-progress-cards');
-$inProgress.droppable({
-  accept: ".card",
-  drop: function (e,ui) {
-    handleDrop(e,ui)
-    
-  }
-});
-let $done = $('#done-cards');
-$done.droppable({
-  accept: ".card",
-  drop: function (e,ui) {
-    handleDrop(e,ui)
-    
-  }
-});
- 
 
+//set up todo card holders as sortable containers.
+let $todo = $('#todo-cards').addClass('.connectedSortable');
+let $inProgress = $('#in-progress-cards').addClass('.connectedSortable');
+let $done = $('#done-cards').addClass('.connectedSortable');;
+
+//task button setup on main page triggers modal form display
+const $addTaskBtn = $('#add-task-btn');
+
+//set up modal form Jqueries
 let $modalForm = $('#modal-form');
 let $taskName = $('#modal-form #task-name');
 let $taskDescription = $('#modal-form #task-description');
 let $taskDueDate = $('#modal-form #due-date');
+let $modaFormSubmit = $('#task-submit-btn');
+const $dueDate = $('#due-date').datepicker();
 
+//make modal form a dialog
 $modalForm.dialog({
         autoOpen: false,
         minHeight: 200,
@@ -58,13 +42,9 @@ $modalForm.dialog({
       modal: true
       }
 );
-let $modaFormSubmit = $('#task-submit-btn');
 
-const $dueDate = $('#due-date').datepicker();
-const $addTaskBtn = $('#add-task-btn');
 
 // Todo: create a function to generate a unique task id
-//
 function generateTaskId() {
     nextId ++;
     localStorage.setItem("nextId",nextId);
@@ -75,7 +55,7 @@ function generateTaskId() {
 // Todo: create a function to create a task card
 function createTaskCard(task) {
     //take the task and return a jquery 
-    $taskCard = $(`<div id="card-${task.taskId}" data-status="${task.taskStatus}" data-id=${task.taskId}></div>`);    
+    $taskCard = $(`<div id="${task.taskId}" data-status="${task.taskStatus}" data-id="card-${task.taskId}"></div>`);    
     
     $taskCard.addClass('card m-4');
 
@@ -129,9 +109,8 @@ function createTaskCard(task) {
         console.log("button clicked", $(event.target).data("purpose"));
     })
     
-    $taskCard.draggable({
-
-    });  
+    $taskCard.addClass('ui-sortable');
+    
 
     return $taskCard;
     //return $taskCard;
@@ -139,9 +118,13 @@ function createTaskCard(task) {
 
 // Todo: create a function to render the task list and make cards draggable
 function renderTaskList() {
-    
+    console.log("render task list: ", taskList);
+    $todo.empty();
+    $inProgress.empty();
+    $done.empty();
+
     for (task of taskList) {
-        
+        console.log(task);
         if (task.taskStatus == TODO) {
             createTaskCard(task);
             $todo.append(createTaskCard(task));
@@ -172,7 +155,7 @@ function handleAddTask(event){
             taskDescription: $taskDescription.val(),
             taskDate:$dueDate.val(),
             taskStatus: TODO,
-            taskId: id,
+            taskId: `card-${id}`,
         }
 
         console.log("task Add id: ",taskAdd.taskId);
@@ -219,10 +202,35 @@ function handleDeleteTask(event){
   localStorage.setItem('tasks',newTaskList);
 }
 
+function updateTaskList (id,status) {
+    console.log("updateTask List gets taskList:",taskList);
+    const newList = [];
+    taskList.map((task)=>{
+        if (task.taskId = id) {
+            task.taskStatus = status;
+        }
+        newList.push(task);
+    });    
+    
+    console.log("update task list: ", newList);
+    return newList;
+}
+
 // Todo: create a function to handle dropping a task into a new status lane
 function handleDrop(event, ui) {
-  console.log("event handle drop",event);
-  console.log("ui handle drop",ui);
+        //console.log(`BF-$UI.item attr(id): `, $(ui.item).attr('id'));
+        //console.log(`BF-Event target.data-status is: `,$(event.target).data('status')); 
+        const $card = $($(ui.item).attr('id'));
+        const newStatus = $(event.target).data('status');
+        $card.data('status',newStatus);
+        //console.log(`$UI.item attr(id): `, $(ui.item).attr('id'));
+        //console.log(`Event target.data-status is: `,$(event.target).data('status')); */
+        //console.log("BF - taskList: ", taskList);
+        taskList = updateTaskList($(ui.item).attr('id'), newStatus);
+        renderTaskList();
+        //console.log("AF - taskList: ", taskList);
+    
+
 }
 
 // Todo: when the page loads, render the task list, add event listeners, make lanes droppable, and make the due date field a date picker
@@ -231,6 +239,43 @@ $(document).ready(function () {
         $modalForm.dialog('open');
     })
     renderTaskList();
+
+function findTaskById(id) {
+    let count = 0;
+    for (task in taskList) {
+        if (task.id == id) {
+            return count;
+        }
+        count ++;
+    }
+    return false;
+}
+
+
+     
+$('#todo-cards, #in-progress-cards, #done-cards').sortable({
+    connectWith: ".connectedSortable",
+    items: ".card",
+    opacity: 0.5,
+    placeholder: "sortable-placeholder",
+    placeholder: "ui-state-highlight",
+    receive: function( event, ui ) {
+        
+        handleDrop(event, ui)
+        
+    },
+   /*  sortUpdate: function( event, ui ) {
+        console.log($(event.target)[0]);
+        console.log($(event.target).parent());
+        console.log(`ui is ${ui.sender}`);
+    }, */
+    items: ".card"
+  }).disableSelection();
+
+  $('#todo-cards, #in-progress-cards, #done-cards').on( "sortstop", function( event, ui ) {
+       
+    });
+  
     $modaFormSubmit.on('click',handleAddTask)
 });
 
